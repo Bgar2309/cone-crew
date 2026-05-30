@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Cone Crew — preview rendu iso (src/render/render.ts)</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #1a1d23; overflow: hidden; }
+    #game { display: block; width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- Aperçu manuel du renderer : `npm run dev` puis /src/render/preview.html
+       Construit un GameState FACTICE (aucune logique de jeu) et l'anime. -->
+  <script type="module">
+    import { createRenderer } from './render.ts';
+
+    const canvas = document.getElementById('game');
+    const renderer = createRenderer(canvas);
+
+    // GameState factice (8x8, une lane horizontale y=3, 4 marques).
+    const state = {
+      worker: { pos: { x: 0, y: 6 }, dir: 'S', moving: true, placing: 0, lives: 3, invuln: 0 },
+      vehicles: [
+        { id: 1, pos: { x: 1, y: 3 }, laneId: 0, speed: 4, kind: 'car', width: 1, length: 1.6 },
+        { id: 2, pos: { x: 5, y: 3 }, laneId: 0, speed: 4, kind: 'car', width: 1, length: 1.6 },
+      ],
+      cones: [
+        { id: 3, pos: { x: 1, y: 4 }, vel: { x: 0, y: 0 }, toppled: false, markId: 0 },
+        { id: 4, pos: { x: 3, y: 4 }, vel: { x: 0, y: 0 }, toppled: true, markId: null },
+      ],
+      marks: [
+        { id: 0, pos: { x: 1, y: 4 }, satisfied: true },
+        { id: 1, pos: { x: 3, y: 4 }, satisfied: false },
+        { id: 2, pos: { x: 5, y: 4 }, satisfied: false },
+        { id: 3, pos: { x: 6, y: 4 }, satisfied: false },
+      ],
+      lanes: [{ id: 0, axis: 'x', offset: 3, dirSign: 1 }],
+      phase: 'rush',
+      timeLeft: 12,
+      waveTime: 0,
+      score: 0,
+      conesLeft: 4,
+      nextId: 5,
+      rng: { next: () => 0, int: () => 0 },
+    };
+
+    renderer.resize();
+    window.addEventListener('resize', () => renderer.resize());
+
+    // Anime worker + véhicules (mutation LOCALE au preview, jamais dans le renderer).
+    let last = performance.now();
+    function frame(now) {
+      const dt = (now - last) / 1000; last = now;
+      state.worker.pos.x = 2 + 2 * Math.sin(now / 700);
+      for (const v of state.vehicles) {
+        v.pos.x += v.speed * dt;
+        if (v.pos.x > 8) v.pos.x = -1;
+      }
+      renderer.draw(state, 0);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
