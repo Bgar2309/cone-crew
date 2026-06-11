@@ -1,6 +1,0 @@
-# Railway : build statique servi par vite preview
-[phases.build]
-cmds = ["npm run build"]
-
-[start]
-cmd = "npm run preview"
