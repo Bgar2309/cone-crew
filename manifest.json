@@ -1,0 +1,13 @@
+{
+  "name": "CONE CREW — the EHS roadworks arcade",
+  "short_name": "Cone Crew",
+  "description": "A three-stage arcade game by EHS, starring the REVO 42 R2 traffic cone.",
+  "start_url": ".",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#0E1116",
+  "theme_color": "#FF4A1F",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

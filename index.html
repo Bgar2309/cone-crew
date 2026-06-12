@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#FF4A1F">
+  <title>CONE CREW — the EHS roadworks arcade</title>
+  <meta name="description" content="CONE CREW: a three-stage arcade game by EHS, starring the REVO 42 R2 traffic cone. Stack it, deploy it, hold the line.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%230E1116'/%3E%3Cpath%20d='M32%208%20L46%2052%20L18%2052%20Z'%20fill='%23FF4A1F'/%3E%3Cpath%20d='M25.5%2030%20L38.5%2030%20L41%2038%20L23%2038%20Z'%20fill='%23F4F1E8'/%3E%3Crect%20x='14'%20y='52'%20width='36'%20height='6'%20rx='2'%20fill='%2315171C'/%3E%3C/svg%3E">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Display font: falls back to Arial Black offline, the game stays fully playable -->
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@500;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="app">
+    <canvas id="game"></canvas>
+
+    <div id="hud" class="hidden">
+      <div class="hud-left">
+        <span id="hud-stage" class="chip chip-stage"></span>
+      </div>
+      <div class="hud-center" id="hud-info"></div>
+      <div class="hud-right">
+        <span id="hud-combo" class="chip chip-combo hidden">x2</span>
+        <span id="hud-score" class="chip chip-score">0</span>
+        <button id="hud-pause" class="icon-btn" aria-label="Pause">&#10074;&#10074;</button>
+      </div>
+    </div>
+
+    <div id="overlay"></div>
+    <div id="vignette"></div>
+  </div>
+
+  <!-- reusable REVO 42 R2 pictogram -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <g id="icn-cone">
+        <path d="M17 63 L28.6 12.5 Q32 7.5 35.4 12.5 L47 63 Z" fill="#FF4A1F"/>
+        <path d="M22.7 41 L41.3 41 L43.3 50 L20.7 50 Z" fill="#EDF1F6"/>
+        <path d="M25.7 27 L38.3 27 L39.9 34 L24.1 34 Z" fill="#EDF1F6"/>
+        <path d="M19 63 L23 46 L26 63 Z" fill="rgba(255,255,255,0.22)"/>
+        <rect x="9" y="62" width="46" height="8" rx="3" fill="#15171C"/>
+      </g>
+    </defs>
+  </svg>
+
+  <script src="js/util.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/cone.js"></script>
+  <script src="js/fx.js"></script>
+  <script src="js/scenes.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/stage1.js"></script>
+  <script src="js/stage2.js"></script>
+  <script src="js/stage3.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
