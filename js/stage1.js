@@ -246,49 +246,111 @@
 
       // depot wall
       let g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, '#171A22');
-      g.addColorStop(0.7, '#20242E');
+      g.addColorStop(0, '#14161D');
+      g.addColorStop(0.55, '#1E222B');
+      g.addColorStop(0.85, '#232833');
       g.addColorStop(1, '#161920');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
+      // wall panel seams
+      ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+      ctx.lineWidth = 1.5;
+      for (let px = W * 0.125; px < W; px += W * 0.125) {
+        ctx.beginPath(); ctx.moveTo(px, H * 0.16); ctx.lineTo(px, L.floorY); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.025)';
+      ctx.fillRect(0, H * 0.16, W, 2);
 
-      // shelving silhouettes
-      ctx.fillStyle = 'rgba(10,12,17,0.55)';
+      // shelving racks with stacked crates
       const rackY = H * 0.30;
-      for (const rx of [W * 0.08, W * 0.80]) {
-        ctx.fillRect(rx, rackY, W * 0.13, H * 0.55);
-        ctx.fillStyle = 'rgba(255,160,90,0.07)';
-        for (let s = 0; s < 3; s++) ctx.fillRect(rx + 6, rackY + 20 + s * H * 0.16, W * 0.13 - 12, H * 0.10);
-        ctx.fillStyle = 'rgba(10,12,17,0.55)';
+      for (const rx of [W * 0.06, W * 0.79]) {
+        const rw = W * 0.15;
+        ctx.fillStyle = '#10131A';
+        ctx.fillRect(rx, rackY, 7, L.floorY - rackY);
+        ctx.fillRect(rx + rw - 7, rackY, 7, L.floorY - rackY);
+        for (let s = 0; s < 4; s++) {
+          const sy = rackY + 8 + s * H * 0.125;
+          ctx.fillStyle = '#0E1117';
+          ctx.fillRect(rx, sy + H * 0.095, rw, 5);
+          // crates with a hint of volume
+          for (let b = 0; b < 3; b++) {
+            if (CC.tex.hash(s * 17 + b + rx) < 0.25) continue;
+            const bw = rw * 0.27, bx = rx + 8 + b * (rw - 16) / 3;
+            const warm = CC.tex.hash(s * 7 + b * 3 + rx) > 0.5;
+            const bg2 = ctx.createLinearGradient(0, sy, 0, sy + H * 0.09);
+            bg2.addColorStop(0, warm ? '#3A2E22' : '#262B36');
+            bg2.addColorStop(1, warm ? '#241C14' : '#171B23');
+            ctx.fillStyle = bg2;
+            CC.util.rr(ctx, bx, sy + H * 0.012, bw, H * 0.085, 2);
+            ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            ctx.fillRect(bx, sy + H * 0.012, bw, 2);
+          }
+        }
       }
 
-      // hanging lamps + light pools
-      for (const lx of [W * 0.25, W * 0.5, W * 0.75]) {
+      // hanging lamps + volumetric light, with drifting dust motes
+      const lamps = [W * 0.25, W * 0.5, W * 0.75];
+      for (let li = 0; li < lamps.length; li++) {
+        const lx = lamps[li];
         ctx.strokeStyle = 'rgba(0,0,0,0.4)';
         ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(lx, 0); ctx.lineTo(lx, H * 0.05); ctx.stroke();
-        const lp = ctx.createRadialGradient(lx, H * 0.06, 4, lx, H * 0.06, H * 0.5);
-        lp.addColorStop(0, 'rgba(255,214,150,0.10)');
-        lp.addColorStop(1, 'rgba(255,214,150,0)');
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const lp = ctx.createLinearGradient(0, H * 0.06, 0, H * 0.92);
+        lp.addColorStop(0, 'rgba(255,206,140,0.13)');
+        lp.addColorStop(1, 'rgba(255,206,140,0)');
         ctx.fillStyle = lp;
         ctx.beginPath();
-        ctx.moveTo(lx - 14, H * 0.06);
-        ctx.lineTo(lx + 14, H * 0.06);
-        ctx.lineTo(lx + H * 0.30, H * 0.9);
-        ctx.lineTo(lx - H * 0.30, H * 0.9);
+        ctx.moveTo(lx - 13, H * 0.06);
+        ctx.lineTo(lx + 13, H * 0.06);
+        ctx.lineTo(lx + H * 0.27, H * 0.92);
+        ctx.lineTo(lx - H * 0.27, H * 0.92);
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = '#FFD696';
-        ctx.fillRect(lx - 12, H * 0.05, 24, 6);
+        // dust motes drifting up through the beam
+        for (let m = 0; m < 9; m++) {
+          const seed = li * 37 + m;
+          const ly = (CC.tex.hash(seed) + this.t * (0.018 + CC.tex.hash(seed + 5) * 0.02)) % 1;
+          const spread = lerp(12, H * 0.25, ly);
+          const mx = lx + (CC.tex.hash(seed + 11) * 2 - 1) * spread + Math.sin(this.t * 0.7 + seed) * 6;
+          const my = lerp(H * 0.88, H * 0.08, ly);
+          ctx.globalAlpha = Math.sin(Math.PI * ly) * 0.4;
+          ctx.fillStyle = '#FFE2B8';
+          ctx.fillRect(mx, my, 1.6, 1.6);
+        }
+        ctx.restore();
+        // lamp shade
+        const lg2 = ctx.createLinearGradient(0, H * 0.045, 0, H * 0.06);
+        lg2.addColorStop(0, '#3A4150');
+        lg2.addColorStop(1, '#FFD696');
+        ctx.fillStyle = lg2;
+        CC.util.rr(ctx, lx - 13, H * 0.044, 26, H * 0.016, 3);
+        ctx.fill();
+        CC.tex.glow(ctx, lx, H * 0.058, 26, '255,214,150', 0.5);
       }
 
-      // floor
+      // floor: gradient + light pools + safety line
       g = ctx.createLinearGradient(0, L.floorY, 0, H);
-      g.addColorStop(0, '#2B2F3A');
-      g.addColorStop(1, '#191C24');
+      g.addColorStop(0, '#31353F');
+      g.addColorStop(0.25, '#272B35');
+      g.addColorStop(1, '#171A21');
       ctx.fillStyle = g;
       ctx.fillRect(0, L.floorY, W, H - L.floorY);
-      ctx.strokeStyle = 'rgba(255,196,0,0.5)';
+      for (const lx of lamps) {
+        const fp = ctx.createRadialGradient(lx, L.floorY + 14, 6, lx, L.floorY + 14, H * 0.22);
+        fp.addColorStop(0, 'rgba(255,210,150,0.10)');
+        fp.addColorStop(1, 'rgba(255,210,150,0)');
+        ctx.fillStyle = fp;
+        ctx.save();
+        ctx.translate(lx, L.floorY + 14);
+        ctx.scale(1, 0.35);
+        ctx.translate(-lx, -(L.floorY + 14));
+        ctx.beginPath(); ctx.arc(lx, L.floorY + 14, H * 0.22, 0, CC.util.TAU); ctx.fill();
+        ctx.restore();
+      }
+      ctx.strokeStyle = 'rgba(255,196,0,0.45)';
       ctx.lineWidth = 3;
       ctx.setLineDash([26, 18]);
       ctx.beginPath();
@@ -298,9 +360,16 @@
 
       // pallet
       const pw = L.coneW * 2.4, ph = L.palletH;
-      ctx.fillStyle = '#6E5232';
+      CC.tex.softShadow(ctx, L.baseX, L.floorY + 2, pw * 0.62, ph * 0.9, 0.35);
+      const pg = ctx.createLinearGradient(0, L.floorY - ph, 0, L.floorY);
+      pg.addColorStop(0, '#7E6040');
+      pg.addColorStop(0.5, '#66492C');
+      pg.addColorStop(1, '#4A3520');
+      ctx.fillStyle = pg;
       CC.util.rr(ctx, L.baseX - pw / 2, L.floorY - ph, pw, ph, 3);
       ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.10)';
+      ctx.fillRect(L.baseX - pw / 2 + 2, L.floorY - ph, pw - 4, 1.5);
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       for (let i = 0; i < 4; i++) ctx.fillRect(L.baseX - pw / 2 + 6 + i * (pw - 12) / 3.2, L.floorY - ph, 5, ph);
       // centre target mark
@@ -312,21 +381,36 @@
       ctx.closePath();
       ctx.fill();
 
-      // stack (with a gentle living wobble)
+      // stack (with a gentle living wobble) + faint reflection on the painted floor
       const lean = this.placed.length ? this.placed[this.placed.length - 1].x - L.baseX : 0;
       const swayAmp = clamp(Math.abs(lean) * 0.05, 0.4, 3.2);
-      for (let i = 0; i < this.placed.length; i++) {
-        const p = this.placed[i];
-        const sway = Math.sin(this.t * 2.4 + i * 0.4) * swayAmp * (i / TARGET);
-        const squash = (1 - easeOutCubic(p.settle)) * 0.22;
-        CC.cone.draw(ctx, {
-          x: p.x + sway,
-          y: L.floorY - ph - i * L.step,
-          h: L.coneH,
-          squash,
-          shadow: i === 0
-        });
+      const drawStack = (refl) => {
+        for (let i = 0; i < this.placed.length; i++) {
+          const p = this.placed[i];
+          const sway = Math.sin(this.t * 2.4 + i * 0.4) * swayAmp * (i / TARGET);
+          const squash = (1 - easeOutCubic(p.settle)) * 0.22;
+          CC.cone.draw(ctx, {
+            x: p.x + sway,
+            y: L.floorY - ph - i * L.step,
+            h: L.coneH,
+            squash,
+            shadow: !refl && i === 0
+          });
+        }
+      };
+      if (this.placed.length) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, L.floorY, W, H - L.floorY);
+        ctx.clip();
+        // squashed mirror about the pallet top: y' = yM + 0.55*(yM - y)
+        ctx.translate(0, 1.55 * (L.floorY - ph));
+        ctx.scale(1, -0.55);
+        ctx.globalAlpha = 0.10;
+        drawStack(true);
+        ctx.restore();
       }
+      drawStack(false);
 
       // tumbling rejects
       for (const c of this.tumbles) {
@@ -397,6 +481,8 @@
         ctx.stroke();
         ctx.setLineDash([]);
       }
+
+      CC.tex.overlay(ctx, 0, 0, W, H, 0.05);
 
       this.drawBanners(ctx, L);
     },

@@ -359,33 +359,62 @@
       ctx.fillStyle = this.skyGrad;
       ctx.fillRect(0, 0, W, L.trafficTop);
 
-      // stars + skyline
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      for (let i = 0; i < 26; i++) {
+      // stars (varied sizes, slow twinkle) + a thin moon glow
+      for (let i = 0; i < 34; i++) {
         const sx = (i * 419.7) % W;
-        const sy = (i * 173.3) % (L.trafficTop * 0.55);
-        ctx.globalAlpha = 0.18 + 0.2 * Math.abs(Math.sin(this.t + i * 2));
-        ctx.fillRect(sx, sy, 2, 2);
+        const sy = (i * 173.3) % (L.trafficTop * 0.6);
+        const big = CC.tex.hash(i) > 0.8;
+        ctx.globalAlpha = (0.14 + 0.22 * Math.abs(Math.sin(this.t * 0.7 + i * 2))) * (big ? 1.6 : 1);
+        ctx.fillStyle = big ? '#DCE8FF' : '#FFFFFF';
+        ctx.fillRect(sx, sy, big ? 2.4 : 1.5, big ? 2.4 : 1.5);
       }
       ctx.globalAlpha = 1;
+      CC.tex.glow(ctx, W * 0.16, L.trafficTop * 0.22, W * 0.06, '190,210,255', 0.16);
+
+      // skyline: varied silhouettes, mixed warm/cool windows, antennas
       for (let i = 0; i < 14; i++) {
         const bw = W / 14;
-        const bh = (0.35 + 0.55 * Math.abs(Math.sin(i * 3.7))) * L.trafficTop * 0.5;
-        ctx.fillStyle = '#0A0E18';
-        ctx.fillRect(i * bw, L.trafficTop - bh, bw - 4, bh);
-        ctx.fillStyle = 'rgba(255,214,140,0.25)';
-        for (let wy = 0; wy < 3; wy++) {
-          if ((i * 7 + wy * 3) % 4 === 0) continue;
-          ctx.fillRect(i * bw + bw * 0.2, L.trafficTop - bh + 8 + wy * 12, 4, 5);
+        const bh = (0.30 + 0.62 * CC.tex.hash(i * 3.7)) * L.trafficTop * 0.55;
+        const bx = i * bw;
+        const bg2 = ctx.createLinearGradient(0, L.trafficTop - bh, 0, L.trafficTop);
+        bg2.addColorStop(0, '#0B0F1A');
+        bg2.addColorStop(1, '#10141F');
+        ctx.fillStyle = bg2;
+        ctx.fillRect(bx, L.trafficTop - bh, bw - 4, bh);
+        // rooftop details
+        if (CC.tex.hash(i + 40) > 0.6) {
+          ctx.fillStyle = '#0B0F1A';
+          ctx.fillRect(bx + bw * 0.42, L.trafficTop - bh - 9, 2, 9);
+          const beat = Math.sin(this.t * 1.8 + i) > 0.6;
+          if (beat) {
+            ctx.fillStyle = '#FF3344';
+            ctx.fillRect(bx + bw * 0.42 - 1, L.trafficTop - bh - 11, 4, 3);
+            CC.tex.glow(ctx, bx + bw * 0.42 + 1, L.trafficTop - bh - 10, 8, '255,60,80', 0.5);
+          }
+        }
+        for (let wy = 0; wy < 4; wy++) {
+          for (let wx2 = 0; wx2 < 2; wx2++) {
+            if (CC.tex.hash(i * 13 + wy * 5 + wx2) < 0.42) continue;
+            const warm = CC.tex.hash(i * 7 + wy + wx2 * 3) > 0.35;
+            ctx.fillStyle = warm ? 'rgba(255,206,130,0.30)' : 'rgba(150,190,255,0.22)';
+            ctx.fillRect(bx + bw * (0.18 + wx2 * 0.36), L.trafficTop - bh + 7 + wy * 11, 4.5, 5);
+          }
         }
       }
+      // ground haze in front of the city
+      const haze = ctx.createLinearGradient(0, L.trafficTop - 26, 0, L.trafficTop);
+      haze.addColorStop(0, 'rgba(20,28,48,0)');
+      haze.addColorStop(1, 'rgba(24,32,52,0.55)');
+      ctx.fillStyle = haze;
+      ctx.fillRect(0, L.trafficTop - 26, W, 26);
 
       // traffic lanes
       const rg = ctx.createLinearGradient(0, L.trafficTop, 0, L.divider);
-      rg.addColorStop(0, '#1C1F27');
-      rg.addColorStop(1, '#272B35');
+      rg.addColorStop(0, '#191C24');
+      rg.addColorStop(1, '#262A34');
       ctx.fillStyle = rg;
       ctx.fillRect(0, L.trafficTop, W, L.divider - L.trafficTop);
+      CC.tex.overlay(ctx, 0, L.trafficTop, W, L.divider - L.trafficTop, 0.10, CC.tex.asphalt());
       ctx.fillStyle = 'rgba(237,234,224,0.5)';
       ctx.fillRect(0, L.trafficTop + 3, W, 3);
       // lane dashes
@@ -394,6 +423,18 @@
       for (let x = off; x < W + 120; x += 120) {
         ctx.fillRect(x, (L.lane1 + L.lane2) / 2 + 6, 52, 4);
       }
+      // wet-road light streaks under the moving headlights
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for (const car of this.cars) {
+        const cy2 = car.y + (car.dip ? car.dip * (L.divider - car.y - 14) : 0);
+        const st = ctx.createLinearGradient(0, cy2, 0, L.divider + 8);
+        st.addColorStop(0, 'rgba(255,236,190,0.16)');
+        st.addColorStop(1, 'rgba(255,236,190,0)');
+        ctx.fillStyle = st;
+        ctx.fillRect(car.x + car.w * 0.25, cy2, car.w * 0.9, L.divider + 8 - cy2);
+      }
+      ctx.restore();
 
       // cars (behind the cone line)
       for (const car of this.cars) this.drawCar(ctx, car, L);
@@ -404,10 +445,12 @@
 
       // work zone
       const zg = ctx.createLinearGradient(0, L.zoneTop, 0, L.zoneBot);
-      zg.addColorStop(0, '#2E323D');
-      zg.addColorStop(1, '#23262E');
+      zg.addColorStop(0, '#31353F');
+      zg.addColorStop(0.5, '#282C36');
+      zg.addColorStop(1, '#1F222A');
       ctx.fillStyle = zg;
       ctx.fillRect(0, L.zoneTop, W, L.zoneBot - L.zoneTop);
+      CC.tex.overlay(ctx, 0, L.zoneTop, W, L.zoneBot - L.zoneTop, 0.12, CC.tex.asphalt());
       // hazard hatch at the zone edge
       ctx.save();
       ctx.beginPath();
@@ -428,11 +471,14 @@
       this.drawZone(ctx, L);
 
       // floodlight pool over the zone
-      const fg = ctx.createRadialGradient(W * 0.5, L.zoneTop + 30, 20, W * 0.5, L.zoneTop + 30, W * 0.55);
-      fg.addColorStop(0, 'rgba(255,230,180,0.10)');
-      fg.addColorStop(1, 'rgba(255,230,180,0)');
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const fg = ctx.createRadialGradient(W * 0.60, L.zoneTop + 50, 20, W * 0.60, L.zoneTop + 50, W * 0.48);
+      fg.addColorStop(0, 'rgba(255,228,175,0.13)');
+      fg.addColorStop(1, 'rgba(255,228,175,0)');
       ctx.fillStyle = fg;
       ctx.fillRect(0, L.trafficTop, W, L.zoneBot - L.trafficTop);
+      ctx.restore();
 
       // the cone line
       for (const cone of this.cones) this.drawCone(ctx, cone, L);
@@ -455,6 +501,8 @@
         ctx.restore();
       }
 
+      CC.tex.overlay(ctx, 0, 0, W, H, 0.05);
+
       this.drawIntegrity(ctx, L);
       this.drawBanners(ctx, L);
 
@@ -469,25 +517,42 @@
       const y = car.y + (car.dip ? car.dip * (L.divider - car.y - 14) : 0);
       const w = car.w, h = w * 0.36;
       ctx.save();
-      // headlight beam
+      // headlight: wide soft throw + bright core + lamp glow
       ctx.globalCompositeOperation = 'lighter';
-      const hb = ctx.createLinearGradient(car.x + w / 2, y, car.x + w / 2 + 200, y);
-      hb.addColorStop(0, 'rgba(255,240,200,0.30)');
+      const hb = ctx.createLinearGradient(car.x + w / 2, y, car.x + w / 2 + 230, y);
+      hb.addColorStop(0, 'rgba(255,240,200,0.20)');
       hb.addColorStop(1, 'rgba(255,240,200,0)');
       ctx.fillStyle = hb;
       ctx.beginPath();
-      ctx.moveTo(car.x + w / 2 - 6, y - 4);
-      ctx.lineTo(car.x + w / 2 + 210, y - 16);
-      ctx.lineTo(car.x + w / 2 + 210, y + 14);
+      ctx.moveTo(car.x + w / 2 - 6, y - 5);
+      ctx.lineTo(car.x + w / 2 + 235, y - 22);
+      ctx.lineTo(car.x + w / 2 + 235, y + 16);
       ctx.lineTo(car.x + w / 2 - 6, y + 6);
+      ctx.closePath();
+      ctx.fill();
+      const hc = ctx.createLinearGradient(car.x + w / 2, y, car.x + w / 2 + 120, y);
+      hc.addColorStop(0, 'rgba(255,248,225,0.30)');
+      hc.addColorStop(1, 'rgba(255,248,225,0)');
+      ctx.fillStyle = hc;
+      ctx.beginPath();
+      ctx.moveTo(car.x + w / 2 - 4, y - 3);
+      ctx.lineTo(car.x + w / 2 + 125, y - 8);
+      ctx.lineTo(car.x + w / 2 + 125, y + 6);
+      ctx.lineTo(car.x + w / 2 - 4, y + 4);
       ctx.closePath();
       ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
 
-      // body
-      ctx.fillStyle = car.c;
+      // body with night shading
+      const bodyG = ctx.createLinearGradient(0, y - h * (car.van ? 1.7 : 1.5), 0, y);
+      bodyG.addColorStop(0, car.c);
+      bodyG.addColorStop(0.75, car.c);
+      bodyG.addColorStop(1, 'rgba(5,6,10,0.95)');
+      ctx.fillStyle = bodyG;
       CC.util.rr(ctx, car.x - w / 2, y - h, w, h, 7);
       ctx.fill();
+      ctx.fillStyle = 'rgba(190,215,255,0.14)';
+      ctx.fillRect(car.x - w * 0.36, y - h + 1.5, w * 0.72, 1.8);
       if (car.van) {
         CC.util.rr(ctx, car.x - w / 2, y - h * 1.7, w * 0.8, h, 6);
         ctx.fill();
@@ -505,8 +570,10 @@
       // lights
       ctx.fillStyle = '#FFF2C8';
       ctx.fillRect(car.x + w / 2 - 5, y - h * 0.7, 5, 5);
+      CC.tex.glow(ctx, car.x + w / 2 - 2, y - h * 0.62, 11, '255,242,200', 0.7);
       ctx.fillStyle = '#FF4040';
       ctx.fillRect(car.x - w / 2, y - h * 0.7, 4, 5);
+      CC.tex.glow(ctx, car.x - w / 2 + 2, y - h * 0.62, 9, '255,60,60', 0.6);
       // wheels
       ctx.fillStyle = '#0C0E12';
       ctx.beginPath(); ctx.arc(car.x - w * 0.3, y, h * 0.32, 0, TAU); ctx.fill();
@@ -562,8 +629,22 @@
       this.drawWorker(ctx, W * 0.43, L.zoneTop + (L.zoneBot - L.zoneTop) * 0.55, 0);
       this.drawWorker(ctx, W * 0.58, L.zoneTop + (L.zoneBot - L.zoneTop) * 0.72, 2.1);
 
-      // floodlight tripod
+      // floodlight tripod with visible beam
       const fx = W * 0.84, fy = L.zoneBot - 10;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const beam = ctx.createLinearGradient(fx, fy - 92, fx - W * 0.34, L.zoneBot);
+      beam.addColorStop(0, 'rgba(255,228,170,0.20)');
+      beam.addColorStop(1, 'rgba(255,228,170,0)');
+      ctx.fillStyle = beam;
+      ctx.beginPath();
+      ctx.moveTo(fx - 12, fy - 96);
+      ctx.lineTo(fx - 2, fy - 84);
+      ctx.lineTo(fx - W * 0.30, L.zoneBot);
+      ctx.lineTo(fx - W * 0.46, L.zoneBot);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
       ctx.strokeStyle = '#3A4150';
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -571,24 +652,43 @@
       ctx.lineTo(fx + 14, fy);
       ctx.moveTo(fx, fy - 70); ctx.lineTo(fx, fy - 86);
       ctx.stroke();
-      ctx.fillStyle = '#FFE6B4';
+      const lg3 = ctx.createLinearGradient(0, fy - 98, 0, fy - 84);
+      lg3.addColorStop(0, '#FFF3D0');
+      lg3.addColorStop(1, '#E8B96A');
+      ctx.fillStyle = lg3;
       CC.util.rr(ctx, fx - 12, fy - 98, 24, 14, 3);
       ctx.fill();
+      CC.tex.glow(ctx, fx - 4, fy - 91, 30, '255,232,180', 0.55);
 
       // EHS site sign
       const sx = W * 0.93, sy = L.zoneTop + 30;
-      ctx.fillStyle = '#F4F1E8';
+      CC.tex.softShadow(ctx, sx, sy + 50, 30, 6, 0.3);
+      const sg2 = ctx.createLinearGradient(0, sy, 0, sy + 44);
+      sg2.addColorStop(0, '#FFFDF6');
+      sg2.addColorStop(1, '#DFDACB');
+      ctx.fillStyle = sg2;
       CC.util.rr(ctx, sx - 30, sy, 60, 44, 4);
       ctx.fill();
       ctx.strokeStyle = CC.cone.ORANGE;
       ctx.lineWidth = 4;
       CC.util.rr(ctx, sx - 30, sy, 60, 44, 4);
       ctx.stroke();
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      for (const bx of [-24, 24]) {
+        ctx.beginPath(); ctx.arc(sx + bx, sy + 6, 1.6, 0, TAU); ctx.fill();
+      }
       ctx.font = `bold 16px ${CC.fx.FONT}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#15171C';
       ctx.fillText('EHS', sx, sy + 22);
+      // sign posts
+      ctx.strokeStyle = '#2A2F3A';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(sx - 14, sy + 44); ctx.lineTo(sx - 14, sy + 52);
+      ctx.moveTo(sx + 14, sy + 44); ctx.lineTo(sx + 14, sy + 52);
+      ctx.stroke();
     },
 
     drawWorker(ctx, x, y, phase) {
