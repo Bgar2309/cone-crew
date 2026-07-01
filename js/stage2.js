@@ -311,87 +311,44 @@
       const key = W + 'x' + H;
       if (this.skyKey !== key) {
         const g = ctx.createLinearGradient(0, 0, 0, L.roadTop);
-        g.addColorStop(0, '#141B3D');
-        g.addColorStop(0.35, '#33274E');
-        g.addColorStop(0.62, '#6E3A4E');
-        g.addColorStop(0.84, '#C75B3C');
-        g.addColorStop(1, '#EE9054');
+        g.addColorStop(0, '#1A2147');
+        g.addColorStop(0.55, '#4A3158');
+        g.addColorStop(0.85, '#C75B3C');
+        g.addColorStop(1, '#E8854A');
         this.skyGrad = g;
         this.skyKey = key;
       }
       ctx.fillStyle = this.skyGrad;
       ctx.fillRect(0, 0, W, L.roadTop);
 
-      // thin cloud streaks
-      ctx.save();
-      ctx.globalAlpha = 0.16;
-      for (let ci = 0; ci < 5; ci++) {
-        const cy = L.hor * (0.28 + CC.tex.hash(ci) * 0.55);
-        const cw2 = W * (0.16 + CC.tex.hash(ci + 8) * 0.25);
-        const cx2 = ((CC.tex.hash(ci + 3) * W * 1.4 - this.t * (3 + ci)) % (W + cw2) + W + cw2) % (W + cw2) - cw2 / 2;
-        const cg = ctx.createLinearGradient(cx2 - cw2 / 2, 0, cx2 + cw2 / 2, 0);
-        cg.addColorStop(0, 'rgba(255,170,120,0)');
-        cg.addColorStop(0.5, 'rgba(255,190,150,0.8)');
-        cg.addColorStop(1, 'rgba(255,170,120,0)');
-        ctx.fillStyle = cg;
-        ctx.fillRect(cx2 - cw2 / 2, cy, cw2, 2.5);
-      }
-      ctx.restore();
-
-      // low sun + warm horizon haze
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      const sg = ctx.createRadialGradient(W * 0.78, L.hor, 6, W * 0.78, L.hor, W * 0.30);
-      sg.addColorStop(0, 'rgba(255,216,150,0.85)');
-      sg.addColorStop(0.16, 'rgba(255,170,90,0.32)');
+      // low sun
+      const sg = ctx.createRadialGradient(W * 0.78, L.hor, 6, W * 0.78, L.hor, W * 0.3);
+      sg.addColorStop(0, 'rgba(255,210,140,0.8)');
+      sg.addColorStop(0.18, 'rgba(255,170,90,0.35)');
       sg.addColorStop(1, 'rgba(255,170,90,0)');
       ctx.fillStyle = sg;
       ctx.fillRect(0, 0, W, L.roadTop);
-      const hz = ctx.createLinearGradient(0, L.hor - H * 0.06, 0, L.hor + H * 0.02);
-      hz.addColorStop(0, 'rgba(255,150,80,0)');
-      hz.addColorStop(0.8, 'rgba(255,150,80,0.18)');
-      hz.addColorStop(1, 'rgba(255,150,80,0)');
-      ctx.fillStyle = hz;
-      ctx.fillRect(0, L.hor - H * 0.06, W, H * 0.08);
-      ctx.restore();
 
-      // layered hills: far (hazy) then near
-      ctx.fillStyle = 'rgba(70,52,92,0.55)';
-      ctx.beginPath();
-      ctx.moveTo(0, L.hor + 2);
-      for (let x = 0; x <= W; x += W / 16) {
-        ctx.lineTo(x, L.hor - 22 - 26 * Math.abs(Math.sin(x * 0.005 + 1.7)));
-      }
-      ctx.lineTo(W, L.hor + 2);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#291F38';
+      // distant hills
+      ctx.fillStyle = '#2A2238';
       ctx.beginPath();
       ctx.moveTo(0, L.hor + 2);
       for (let x = 0; x <= W; x += W / 12) {
-        ctx.lineTo(x, L.hor - 8 - 26 * Math.abs(Math.sin(x * 0.008 + 5)));
+        ctx.lineTo(x, L.hor - 10 - 30 * Math.abs(Math.sin(x * 0.008 + 5)));
       }
       ctx.lineTo(W, L.hor + 2);
       ctx.closePath();
       ctx.fill();
 
       // opposite carriageway strip + bg cars
-      const ofg = ctx.createLinearGradient(0, L.hor, 0, L.roadTop);
-      ofg.addColorStop(0, '#2B2734');
-      ofg.addColorStop(1, '#201F28');
-      ctx.fillStyle = ofg;
+      ctx.fillStyle = '#23222B';
       ctx.fillRect(0, L.hor, W, L.roadTop - L.hor);
       for (const c of this.bgCars) {
-        const cg2 = ctx.createLinearGradient(0, c.y - 11, 0, c.y + 2);
-        cg2.addColorStop(0, c.c);
-        cg2.addColorStop(1, 'rgba(10,10,14,0.9)');
-        ctx.fillStyle = cg2;
+        ctx.fillStyle = c.c;
         CC.util.rr(ctx, c.x - 26, c.y - 11, 52, 12, 4);
         ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.18)';
-        ctx.fillRect(c.x - 18, c.y - 10, 36, 2);
-        const lx = c.v > 0 ? c.x + 24 : c.x - 24;
-        CC.tex.glow(ctx, lx, c.y - 6, 14, c.v > 0 ? '255,240,200' : '255,70,60', 0.5);
+        ctx.fillStyle = 'rgba(255,255,210,0.8)';
+        ctx.fillRect(c.v > 0 ? c.x + 22 : c.x - 26, c.y - 8, 4, 3);
       }
       // guardrail
       ctx.fillStyle = '#3A4150';
@@ -404,37 +361,15 @@
 
       // main road
       const rg = ctx.createLinearGradient(0, L.roadTop, 0, L.roadBot);
-      rg.addColorStop(0, '#34373F');
-      rg.addColorStop(0.5, '#3B3F49');
-      rg.addColorStop(1, '#43474F');
+      rg.addColorStop(0, '#33363F');
+      rg.addColorStop(1, '#3E424D');
       ctx.fillStyle = rg;
       ctx.fillRect(0, L.roadTop, W, L.roadBot - L.roadTop);
-      CC.tex.overlay(ctx, 0, L.roadTop, W, L.roadBot - L.roadTop, 0.13, CC.tex.asphalt());
-      // tyre-polish tracks in each lane
-      for (const ly of [L.midY - (L.midY - L.roadTop) * 0.5, (L.midY + L.roadBot) / 2]) {
-        for (const off2 of [-(L.midY - L.roadTop) * 0.22, (L.midY - L.roadTop) * 0.22]) {
-          const tg = ctx.createLinearGradient(0, ly + off2 - 7, 0, ly + off2 + 7);
-          tg.addColorStop(0, 'rgba(0,0,0,0)');
-          tg.addColorStop(0.5, 'rgba(0,0,0,0.16)');
-          tg.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.fillStyle = tg;
-          ctx.fillRect(0, ly + off2 - 7, W, 14);
-        }
-      }
-      // warm dusk light kissing the tarmac
-      const warm = ctx.createLinearGradient(0, L.roadTop, 0, L.roadBot);
-      warm.addColorStop(0, 'rgba(255,140,70,0.10)');
-      warm.addColorStop(0.4, 'rgba(255,140,70,0.03)');
-      warm.addColorStop(1, 'rgba(255,140,70,0)');
-      ctx.fillStyle = warm;
-      ctx.fillRect(0, L.roadTop, W, L.roadBot - L.roadTop);
 
-      // edge lines (slightly worn)
-      ctx.fillStyle = 'rgba(237,234,224,0.92)';
+      // edge lines
+      ctx.fillStyle = '#EDEAE0';
       ctx.fillRect(0, L.roadTop + 6, W, 4);
       ctx.fillRect(0, L.roadBot - 8, W, 5);
-      CC.tex.overlay(ctx, 0, L.roadTop + 6, W, 4, 0.25, CC.tex.asphalt());
-      CC.tex.overlay(ctx, 0, L.roadBot - 8, W, 5, 0.25, CC.tex.asphalt());
       // dashed centre line (scrolls)
       const period = 130;
       const off = -((this.scroll % period) + period) % period;
@@ -507,8 +442,6 @@
 
       if (this.board) this.drawBoard(ctx, L);
 
-      CC.tex.overlay(ctx, 0, 0, W, H, 0.04);
-
       this.drawBanners(ctx, L);
     },
 
@@ -526,30 +459,22 @@
 
       ctx.save();
 
-      // soft ground shadow
-      CC.tex.softShadow(ctx, x + len / 2, y + 7, len * 0.60, 11, 0.4);
+      // shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(x + len / 2, y + 6, len * 0.55, 10, 0, 0, TAU);
+      ctx.fill();
 
       // flatbed
-      const fbg = ctx.createLinearGradient(0, bedTop + 18, 0, y);
-      fbg.addColorStop(0, '#343B48');
-      fbg.addColorStop(0.25, '#262A33');
-      fbg.addColorStop(1, '#1A1D24');
-      ctx.fillStyle = fbg;
+      ctx.fillStyle = '#262A33';
       CC.util.rr(ctx, x, bedTop + 26, len - cabW + 10, y - bedTop - 22, 4);
       ctx.fill();
-      const dkg = ctx.createLinearGradient(0, bedTop + 18, 0, bedTop + 30);
-      dkg.addColorStop(0, '#49515F');
-      dkg.addColorStop(1, '#313846');
-      ctx.fillStyle = dkg;
+      ctx.fillStyle = '#3A4150';
       CC.util.rr(ctx, x - 4, bedTop + 18, len - cabW + 16, 12, 3);
       ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.10)';
-      ctx.fillRect(x - 4, bedTop + 18, len - cabW + 16, 1.5);
       // bed rail
       ctx.fillStyle = '#2E3340';
       ctx.fillRect(x - 4, bedTop - 6, 6, 28);
-      ctx.fillStyle = 'rgba(255,255,255,0.10)';
-      ctx.fillRect(x - 4, bedTop - 6, 2, 28);
 
       // supply cones on the bed
       const sh = L.coneH * 0.78;
@@ -590,95 +515,48 @@
 
       // cab
       const cx = x + len - cabW;
-      const cabG = ctx.createLinearGradient(0, bedTop - 4, 0, y);
-      cabG.addColorStop(0, '#FF7A45');
-      cabG.addColorStop(0.35, '#FF4A1F');
-      cabG.addColorStop(1, '#C93509');
-      ctx.fillStyle = cabG;
-      CC.util.rr(ctx, cx, bedTop - 4, cabW, y - bedTop + 2, 8);
+      ctx.fillStyle = CC.cone.ORANGE;
+      CC.util.rr(ctx, cx, bedTop - 4, cabW, y - bedTop + 2, 7);
       ctx.fill();
-      // roof catch-light + skirt
-      ctx.fillStyle = 'rgba(255,255,255,0.22)';
-      CC.util.rr(ctx, cx + 3, bedTop - 4, cabW - 6, 3, 2);
+      ctx.fillStyle = '#D63A12';
+      ctx.fillRect(cx, y - 14, cabW, 12);
+      // window
+      ctx.fillStyle = '#BFE3F2';
+      CC.util.rr(ctx, cx + cabW * 0.42, bedTop + 2, cabW * 0.46, (y - bedTop) * 0.42, 5);
       ctx.fill();
-      ctx.fillStyle = 'rgba(0,0,0,0.30)';
-      ctx.fillRect(cx, y - 13, cabW, 11);
-      // door seam + handle
-      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx + cabW * 0.56, bedTop + 2);
-      ctx.lineTo(cx + cabW * 0.56, y - 13);
-      ctx.stroke();
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      CC.util.rr(ctx, cx + cabW * 0.44, bedTop + (y - bedTop) * 0.5, cabW * 0.09, 2.5, 1);
-      ctx.fill();
-      // windscreen with dusk reflection
-      const winX = cx + cabW * 0.42, winW = cabW * 0.47, winY = bedTop + 2, winH = (y - bedTop) * 0.42;
-      const wg = ctx.createLinearGradient(0, winY, 0, winY + winH);
-      wg.addColorStop(0, '#D8EAF4');
-      wg.addColorStop(0.5, '#9FC4DC');
-      wg.addColorStop(1, '#6E93AE');
-      ctx.fillStyle = wg;
-      CC.util.rr(ctx, winX, winY, winW, winH, 5);
-      ctx.fill();
-      ctx.save();
-      CC.util.rr(ctx, winX, winY, winW, winH, 5);
-      ctx.clip();
-      ctx.fillStyle = 'rgba(255,255,255,0.45)';
-      ctx.beginPath();
-      ctx.moveTo(winX + winW * 0.15, winY);
-      ctx.lineTo(winX + winW * 0.42, winY);
-      ctx.lineTo(winX + winW * 0.10, winY + winH);
-      ctx.lineTo(winX - winW * 0.1, winY + winH);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
       // EHS door logo
       ctx.font = `bold ${Math.max(11, cabW * 0.16)}px ${CC.fx.FONT}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(0,0,0,0.25)';
-      ctx.fillText('EHS', cx + cabW * 0.34, bedTop + (y - bedTop) * 0.62 + 1.5);
       ctx.fillStyle = '#FFFFFF';
       ctx.fillText('EHS', cx + cabW * 0.34, bedTop + (y - bedTop) * 0.62);
       // beacon
       const blink = Math.sin(this.t * 9) > 0;
-      const beG = ctx.createLinearGradient(0, bedTop - 12, 0, bedTop - 3);
-      beG.addColorStop(0, blink ? '#FFE27A' : '#A87E10');
-      beG.addColorStop(1, blink ? '#F5A700' : '#6B4F08');
-      ctx.fillStyle = beG;
+      ctx.fillStyle = blink ? '#FFC400' : '#8F6A00';
       CC.util.rr(ctx, cx + cabW * 0.5 - 6, bedTop - 12, 12, 9, 3);
       ctx.fill();
-      if (blink) CC.tex.glow(ctx, cx + cabW * 0.5, bedTop - 8, 52, '255,196,0', 0.5);
+      if (blink) {
+        const bg = ctx.createRadialGradient(cx + cabW * 0.5, bedTop - 8, 2, cx + cabW * 0.5, bedTop - 8, 46);
+        bg.addColorStop(0, 'rgba(255,196,0,0.45)');
+        bg.addColorStop(1, 'rgba(255,196,0,0)');
+        ctx.fillStyle = bg;
+        ctx.beginPath(); ctx.arc(cx + cabW * 0.5, bedTop - 8, 46, 0, TAU); ctx.fill();
+      }
 
-      // headlight throw ahead of the cab
-      CC.tex.glow(ctx, x + len + 4, y - L.coneH * 0.35, 26, '255,240,200', 0.35);
-
-      // wheels with arches
+      // wheels
       const wr = Math.max(10, L.coneH * 0.26);
       for (const wxp of [x + len * 0.16, x + len * 0.82]) {
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        ctx.beginPath(); ctx.arc(wxp, y - 2, wr * 1.18, Math.PI, 0); ctx.fill();
-        const tg2 = ctx.createRadialGradient(wxp - wr * 0.3, y - wr * 0.3, wr * 0.1, wxp, y, wr);
-        tg2.addColorStop(0, '#262B33');
-        tg2.addColorStop(0.7, '#14161A');
-        tg2.addColorStop(1, '#0A0C0F');
-        ctx.fillStyle = tg2;
+        ctx.fillStyle = '#14161A';
         ctx.beginPath(); ctx.arc(wxp, y, wr, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#3E4654';
-        ctx.beginPath(); ctx.arc(wxp, y, wr * 0.46, 0, TAU); ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.12)';
-        ctx.beginPath(); ctx.arc(wxp - wr * 0.12, y - wr * 0.12, wr * 0.30, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#3A4150';
+        ctx.beginPath(); ctx.arc(wxp, y, wr * 0.45, 0, TAU); ctx.fill();
         ctx.strokeStyle = '#14161A';
         ctx.lineWidth = 2;
         const a = this.scroll / wr;
-        for (const sp of [0, Math.PI / 2]) {
-          ctx.beginPath();
-          ctx.moveTo(wxp - Math.cos(a + sp) * wr * 0.4, y - Math.sin(a + sp) * wr * 0.4);
-          ctx.lineTo(wxp + Math.cos(a + sp) * wr * 0.4, y + Math.sin(a + sp) * wr * 0.4);
-          ctx.stroke();
-        }
+        ctx.beginPath();
+        ctx.moveTo(wxp - Math.cos(a) * wr * 0.4, y - Math.sin(a) * wr * 0.4);
+        ctx.lineTo(wxp + Math.cos(a) * wr * 0.4, y + Math.sin(a) * wr * 0.4);
+        ctx.stroke();
       }
 
       ctx.restore();
@@ -689,15 +567,9 @@
       const y = L.midY + 36;
       ctx.save();
       // trailer
-      CC.tex.softShadow(ctx, b.x, y + 8, 52, 9, 0.35);
-      const pg2 = ctx.createLinearGradient(0, y - 70, 0, y - 8);
-      pg2.addColorStop(0, '#333947');
-      pg2.addColorStop(1, '#1E222B');
-      ctx.fillStyle = pg2;
+      ctx.fillStyle = '#2A2F3A';
       CC.util.rr(ctx, b.x - 44, y - 70, 88, 62, 6);
       ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.08)';
-      ctx.fillRect(b.x - 44, y - 70, 88, 2);
       ctx.strokeStyle = '#3A4150';
       ctx.lineWidth = 4;
       ctx.beginPath(); ctx.moveTo(b.x - 30, y - 8); ctx.lineTo(b.x - 30, y + 8); ctx.stroke();
@@ -714,7 +586,6 @@
         ctx.lineTo(ax - 7, y - 39);
         ctx.closePath();
         ctx.fill();
-        if (on) CC.tex.glow(ctx, ax - 6, y - 39, 17, '255,196,0', 0.35);
       }
       ctx.restore();
     },
