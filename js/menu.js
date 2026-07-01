@@ -177,43 +177,21 @@
       const hy = W > 760 ? H * 0.80 : H * 0.87;
       const bob = Math.sin(this.t * 1.3) * hh * 0.012;
 
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      // warm pool of light on the tarmac
       const lg = ctx.createRadialGradient(hx, hy + 6, 8, hx, hy + 6, hh * 0.95);
-      lg.addColorStop(0, 'rgba(255,190,120,0.30)');
-      lg.addColorStop(1, 'rgba(255,190,120,0)');
+      lg.addColorStop(0, 'rgba(255,200,140,0.34)');
+      lg.addColorStop(1, 'rgba(255,200,140,0)');
       ctx.fillStyle = lg;
       ctx.beginPath();
-      ctx.ellipse(hx, hy + 8, hh * 0.95, hh * 0.30, 0, 0, TAU);
+      ctx.ellipse(hx, hy + 8, hh * 0.95, hh * 0.3, 0, 0, TAU);
       ctx.fill();
-      // spotlight beam from above
-      const bg2 = ctx.createLinearGradient(0, hy - hh * 1.8, 0, hy + 10);
-      bg2.addColorStop(0, 'rgba(255,235,205,0.11)');
-      bg2.addColorStop(1, 'rgba(255,235,205,0.015)');
-      ctx.fillStyle = bg2;
+      ctx.fillStyle = 'rgba(255,235,205,0.06)';
       ctx.beginPath();
-      ctx.moveTo(hx - hh * 0.14, hy - hh * 1.8);
-      ctx.lineTo(hx + hh * 0.14, hy - hh * 1.8);
+      ctx.moveTo(hx - hh * 0.16, hy - hh * 1.7);
+      ctx.lineTo(hx + hh * 0.16, hy - hh * 1.7);
       ctx.lineTo(hx + hh * 0.62, hy + 10);
       ctx.lineTo(hx - hh * 0.62, hy + 10);
       ctx.closePath();
       ctx.fill();
-      ctx.restore();
-      // low podium disc under the star
-      const pr = hh * 0.52;
-      const pdg = ctx.createLinearGradient(0, hy - 6, 0, hy + 14);
-      pdg.addColorStop(0, '#2E323D');
-      pdg.addColorStop(1, '#14161C');
-      ctx.fillStyle = pdg;
-      ctx.beginPath();
-      ctx.ellipse(hx, hy + 6, pr, pr * 0.22, 0, 0, TAU);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,200,140,0.28)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.ellipse(hx, hy + 3, pr * 0.99, pr * 0.21, 0, Math.PI, TAU);
-      ctx.stroke();
 
       const shine = this.shinePhase >= 0 ? Math.sin(Math.PI * this.shinePhase) : 0;
       CC.cone.draw(ctx, {
@@ -247,8 +225,6 @@
           tilt: Math.sin(this.t * 2 + i) * 0.04
         });
       }
-
-      CC.tex.overlay(ctx, 0, 0, W, H, 0.045);
     },
 
     onPress() {},

@@ -116,7 +116,7 @@ def('webkitAudioContext', undefined);
 /* ------------------------ load the game ---------------------- */
 
 const ROOT = path.join(__dirname, '..');
-const FILES = ['util', 'i18n', 'audio', 'tex', 'cone', 'fx', 'scenes', 'ui', 'menu', 'stage1', 'stage2', 'stage3', 'main'];
+const FILES = ['util', 'i18n', 'audio', 'cone', 'fx', 'scenes', 'ui', 'menu', 'stage1', 'stage2', 'stage3', 'main'];
 for (const f of FILES) {
   const file = path.join(ROOT, 'js', f + '.js');
   vm.runInThisContext(fs.readFileSync(file, 'utf8'), { filename: file });
