@@ -80,6 +80,43 @@
       return;
     }
 
+    // AI-art sprite of the real REVO 42 R2 when available — the transforms
+    // above (lie / tilt / squash) already apply to it, so every animation
+    // works unchanged. Vector drawing below stays as the offline fallback.
+    const SP = CC.sprites;
+    if (SP && SP.has('cone')) {
+      const img = SP.get('cone');
+      const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+      const dh = h * 1.045;
+      const dw = dh * (iw / ih);
+      const dTop = baseH * 0.3 - dh;
+      ctx.drawImage(img, -dw / 2, dTop, dw, dh);
+
+      // retro-reflective band flash: white silhouette clipped to the two
+      // band strips (fractions of sprite height, measured from the ground)
+      const fl = o.flash || 0;
+      if (fl > 0.01) {
+        const sil = SP.silhouette('cone');
+        if (sil) {
+          for (const [b1, b2] of [[0.25, 0.45], [0.62, 0.81]]) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(-dw / 2, dTop + dh * (1 - b2), dw, dh * (b2 - b1));
+            ctx.clip();
+            ctx.globalAlpha = alpha * fl * 0.85;
+            ctx.shadowColor = '#FFFFFF';
+            ctx.shadowBlur = h * 0.2;
+            ctx.drawImage(sil, -dw / 2, dTop, dw, dh);
+            ctx.restore();
+          }
+        }
+      }
+
+      drawFace(ctx, o, h);
+      ctx.restore();
+      return;
+    }
+
     // black rubber base
     ctx.fillStyle = BASE;
     rr(ctx, -baseW / 2, -baseH, baseW, baseH * 1.05, h * 0.025);
@@ -157,33 +194,36 @@
     ctx.lineWidth = Math.max(1, h * 0.014);
     ctx.stroke();
 
-    // optional mascot face (menus only — the product stays serious on the job)
-    if (o.face) {
-      const ey = yAt(0.51);
-      const ex = h * 0.062;
-      const er = h * 0.05;
-      const blink = clamp(o.blink || 0, 0, 1);
-      const lookX = (o.look && o.look.x || 0) * er * 0.45;
-      const lookY = (o.look && o.look.y || 0) * er * 0.45;
-      for (const s of [-1, 1]) {
-        ctx.save();
-        ctx.translate(s * ex, ey);
-        ctx.scale(1, 1 - blink * 0.92);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.beginPath(); ctx.arc(0, 0, er, 0, CC.util.TAU); ctx.fill();
-        ctx.fillStyle = '#1A1D23';
-        ctx.beginPath(); ctx.arc(lookX, lookY, er * 0.46, 0, CC.util.TAU); ctx.fill();
-        ctx.restore();
-      }
-      ctx.strokeStyle = '#1A1D23';
-      ctx.lineWidth = Math.max(1.2, h * 0.016);
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.arc(0, ey + h * 0.045, h * 0.045, 0.25 * Math.PI, 0.75 * Math.PI);
-      ctx.stroke();
-    }
+    drawFace(ctx, o, h);
 
     ctx.restore();
+  }
+
+  // optional mascot face (menus only — the product stays serious on the job)
+  function drawFace(ctx, o, h) {
+    if (!o.face) return;
+    const ey = lerp(-h * 0.075 * 0.75, -h * 0.97, 0.51);
+    const ex = h * 0.062;
+    const er = h * 0.05;
+    const blink = clamp(o.blink || 0, 0, 1);
+    const lookX = (o.look && o.look.x || 0) * er * 0.45;
+    const lookY = (o.look && o.look.y || 0) * er * 0.45;
+    for (const s of [-1, 1]) {
+      ctx.save();
+      ctx.translate(s * ex, ey);
+      ctx.scale(1, 1 - blink * 0.92);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath(); ctx.arc(0, 0, er, 0, CC.util.TAU); ctx.fill();
+      ctx.fillStyle = '#1A1D23';
+      ctx.beginPath(); ctx.arc(lookX, lookY, er * 0.46, 0, CC.util.TAU); ctx.fill();
+      ctx.restore();
+    }
+    ctx.strokeStyle = '#1A1D23';
+    ctx.lineWidth = Math.max(1.2, h * 0.016);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(0, ey + h * 0.045, h * 0.045, 0.25 * Math.PI, 0.75 * Math.PI);
+    ctx.stroke();
   }
 
   CC.cone = {

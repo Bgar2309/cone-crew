@@ -307,38 +307,40 @@
       const L = this.layout();
       const { W, H } = L;
 
-      // dusk sky (cached)
-      const key = W + 'x' + H;
-      if (this.skyKey !== key) {
-        const g = ctx.createLinearGradient(0, 0, 0, L.roadTop);
-        g.addColorStop(0, '#1A2147');
-        g.addColorStop(0.55, '#4A3158');
-        g.addColorStop(0.85, '#C75B3C');
-        g.addColorStop(1, '#E8854A');
-        this.skyGrad = g;
-        this.skyKey = key;
-      }
-      ctx.fillStyle = this.skyGrad;
-      ctx.fillRect(0, 0, W, L.roadTop);
+      // dusk sky: AI backdrop when loaded, procedural gradient otherwise
+      if (!(CC.sprites && CC.sprites.cover(ctx, 'bgDusk', 0, 0, W, L.roadTop, 1))) {
+        const key = W + 'x' + H;
+        if (this.skyKey !== key) {
+          const g = ctx.createLinearGradient(0, 0, 0, L.roadTop);
+          g.addColorStop(0, '#1A2147');
+          g.addColorStop(0.55, '#4A3158');
+          g.addColorStop(0.85, '#C75B3C');
+          g.addColorStop(1, '#E8854A');
+          this.skyGrad = g;
+          this.skyKey = key;
+        }
+        ctx.fillStyle = this.skyGrad;
+        ctx.fillRect(0, 0, W, L.roadTop);
 
-      // low sun
-      const sg = ctx.createRadialGradient(W * 0.78, L.hor, 6, W * 0.78, L.hor, W * 0.3);
-      sg.addColorStop(0, 'rgba(255,210,140,0.8)');
-      sg.addColorStop(0.18, 'rgba(255,170,90,0.35)');
-      sg.addColorStop(1, 'rgba(255,170,90,0)');
-      ctx.fillStyle = sg;
-      ctx.fillRect(0, 0, W, L.roadTop);
+        // low sun
+        const sg = ctx.createRadialGradient(W * 0.78, L.hor, 6, W * 0.78, L.hor, W * 0.3);
+        sg.addColorStop(0, 'rgba(255,210,140,0.8)');
+        sg.addColorStop(0.18, 'rgba(255,170,90,0.35)');
+        sg.addColorStop(1, 'rgba(255,170,90,0)');
+        ctx.fillStyle = sg;
+        ctx.fillRect(0, 0, W, L.roadTop);
 
-      // distant hills
-      ctx.fillStyle = '#2A2238';
-      ctx.beginPath();
-      ctx.moveTo(0, L.hor + 2);
-      for (let x = 0; x <= W; x += W / 12) {
-        ctx.lineTo(x, L.hor - 10 - 30 * Math.abs(Math.sin(x * 0.008 + 5)));
+        // distant hills
+        ctx.fillStyle = '#2A2238';
+        ctx.beginPath();
+        ctx.moveTo(0, L.hor + 2);
+        for (let x = 0; x <= W; x += W / 12) {
+          ctx.lineTo(x, L.hor - 10 - 30 * Math.abs(Math.sin(x * 0.008 + 5)));
+        }
+        ctx.lineTo(W, L.hor + 2);
+        ctx.closePath();
+        ctx.fill();
       }
-      ctx.lineTo(W, L.hor + 2);
-      ctx.closePath();
-      ctx.fill();
 
       // opposite carriageway strip + bg cars
       ctx.fillStyle = '#23222B';
@@ -451,6 +453,86 @@
     },
 
     drawTruck(ctx, L) {
+      const SP = CC.sprites;
+      if (!SP || !SP.has('truck')) { this.drawTruckVector(ctx, L); return; }
+      const img = SP.get('truck');
+      const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+
+      const TW = clamp(L.W * 0.26, 220, 350);
+      const TH = TW * (ih / iw);
+      const bob = Math.sin(this.t * 9) * 1.5;
+      const gy = L.truckY + Math.max(10, L.coneH * 0.26) + bob; // ground under the tires
+      const rx = L.dropX - TW * 0.02;                           // rear bumper
+      // sprite anchor fractions (measured on assets/img/truck.png)
+      const railY = gy - TH * 0.556;                            // top of the bed side rail
+
+      ctx.save();
+
+      // shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(rx + TW / 2, gy - 2, TW * 0.52, 10, 0, 0, TAU);
+      ctx.fill();
+
+      // supply cones + crew drawn first: the bed side rail occludes their base
+      const sh = L.coneH * 0.8;
+      for (let i = 0; i < 4; i++) {
+        CC.cone.draw(ctx, {
+          x: rx + TW * (0.18 + i * 0.105), y: railY + sh * 0.16, h: sh,
+          shadow: false
+        });
+      }
+      this.drawCrew(ctx, rx + TW * 0.105, railY + 4);
+
+      ctx.drawImage(img, rx, gy - TH, TW, TH);
+
+      // blinking beacon over the (off) dome baked into the sprite
+      const blink = Math.sin(this.t * 9) > 0;
+      if (blink) {
+        const bx = rx + TW * 0.737, by = gy - TH + TH * 0.045;
+        ctx.fillStyle = '#FFD24A';
+        ctx.beginPath(); ctx.arc(bx, by, TW * 0.014, 0, TAU); ctx.fill();
+        const bg = ctx.createRadialGradient(bx, by, 2, bx, by, TW * 0.16);
+        bg.addColorStop(0, 'rgba(255,196,0,0.45)');
+        bg.addColorStop(1, 'rgba(255,196,0,0)');
+        ctx.fillStyle = bg;
+        ctx.beginPath(); ctx.arc(bx, by, TW * 0.16, 0, TAU); ctx.fill();
+      }
+
+      ctx.restore();
+    },
+
+    drawCrew(ctx, wx, wy) {
+      const throwK = this.throwT < 1 ? Math.sin(Math.PI * clamp(this.throwT, 0, 1)) : 0;
+      ctx.save();
+      ctx.lineCap = 'round';
+      // legs
+      ctx.strokeStyle = '#23262E';
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(wx - 3, wy - 14); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(wx + 4, wy); ctx.lineTo(wx + 3, wy - 14); ctx.stroke();
+      // hi-vis torso
+      ctx.fillStyle = '#FFB400';
+      CC.util.rr(ctx, wx - 6, wy - 30, 13, 18, 3);
+      ctx.fill();
+      ctx.fillStyle = '#EDF1F6';
+      ctx.fillRect(wx - 6, wy - 25, 13, 3);
+      // head + helmet
+      ctx.fillStyle = '#E8B88F';
+      ctx.beginPath(); ctx.arc(wx + 1, wy - 36, 5, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath(); ctx.arc(wx + 1, wy - 38, 5.5, Math.PI, 0); ctx.fill();
+      // throwing arm
+      ctx.strokeStyle = '#FFB400';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.moveTo(wx, wy - 26);
+      ctx.lineTo(wx - 10 - throwK * 8, wy - 22 + throwK * 12);
+      ctx.stroke();
+      ctx.restore();
+    },
+
+    drawTruckVector(ctx, L) {
       const x = L.dropX;            // rear of the truck
       const len = clamp(L.W * 0.22, 170, 280);
       const y = L.truckY + Math.sin(this.t * 9) * 1.5;
@@ -486,32 +568,7 @@
       }
 
       // crew member at the rear of the bed
-      const wx = x + 14, wy = bedTop + 20;
-      const throwK = this.throwT < 1 ? Math.sin(Math.PI * clamp(this.throwT, 0, 1)) : 0;
-      ctx.lineCap = 'round';
-      // legs
-      ctx.strokeStyle = '#23262E';
-      ctx.lineWidth = 5;
-      ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(wx - 3, wy - 14); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(wx + 4, wy); ctx.lineTo(wx + 3, wy - 14); ctx.stroke();
-      // hi-vis torso
-      ctx.fillStyle = '#FFB400';
-      CC.util.rr(ctx, wx - 6, wy - 30, 13, 18, 3);
-      ctx.fill();
-      ctx.fillStyle = '#EDF1F6';
-      ctx.fillRect(wx - 6, wy - 25, 13, 3);
-      // head + helmet
-      ctx.fillStyle = '#E8B88F';
-      ctx.beginPath(); ctx.arc(wx + 1, wy - 36, 5, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath(); ctx.arc(wx + 1, wy - 38, 5.5, Math.PI, 0); ctx.fill();
-      // throwing arm
-      ctx.strokeStyle = '#FFB400';
-      ctx.lineWidth = 4.5;
-      ctx.beginPath();
-      ctx.moveTo(wx, wy - 26);
-      ctx.lineTo(wx - 10 - throwK * 8, wy - 22 + throwK * 12);
-      ctx.stroke();
+      this.drawCrew(ctx, x + 14, bedTop + 20);
 
       // cab
       const cx = x + len - cabW;

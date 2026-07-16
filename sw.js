@@ -1,5 +1,5 @@
 /* CONE CREW — service worker: cache-first so the booth survives bad venue wifi */
-const CACHE = 'cone-crew-v1';
+const CACHE = 'cone-crew-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
   './js/util.js',
   './js/i18n.js',
   './js/audio.js',
+  './js/sprites.js',
   './js/cone.js',
   './js/fx.js',
   './js/scenes.js',
@@ -18,7 +19,14 @@ const ASSETS = [
   './js/stage3.js',
   './js/main.js',
   './assets/icon.svg',
-  './assets/revo-42-r2.jpg'
+  './assets/revo-42-r2.jpg',
+  './assets/img/cone.png',
+  './assets/img/truck.png',
+  './assets/img/logo.png',
+  './assets/img/bg-menu.jpg',
+  './assets/img/bg-dusk.jpg',
+  './assets/img/bg-night.jpg',
+  './assets/img/bg-depot.jpg'
 ];
 
 self.addEventListener('install', (e) => {

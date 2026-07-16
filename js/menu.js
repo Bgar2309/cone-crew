@@ -41,9 +41,11 @@
       this.streakTimer -= dt;
       if (this.streakTimer <= 0) {
         const dir = Math.random() < 0.5 ? 1 : -1;
+        // the AI backdrop has a lower horizon than the procedural one
+        const hasBg = CC.sprites && CC.sprites.has('bgMenu');
         this.streaks.push({
           x: dir > 0 ? -150 : W + 150,
-          y: H * rand(0.42, 0.47),
+          y: H * (hasBg ? rand(0.60, 0.645) : rand(0.42, 0.47)),
           sp: rand(650, 1050) * dir,
           white: Math.random() < 0.6
         });
@@ -78,50 +80,53 @@
 
     draw(ctx) {
       const W = CC.view.W, H = CC.view.H;
-      const hor = H * 0.48;
+      const hasBg = CC.sprites && CC.sprites.cover(ctx, 'bgMenu', 0, 0, W, H, 1);
+      const hor = H * (hasBg ? 0.62 : 0.48);
 
-      // dusk sky (cached gradient)
-      const key = W + 'x' + H;
-      if (this.skyKey !== key) {
-        const g = ctx.createLinearGradient(0, 0, 0, H);
-        g.addColorStop(0, '#0B1026');
-        g.addColorStop(0.45, '#1B2140');
-        g.addColorStop(0.72, '#5A2A33');
-        g.addColorStop(1, '#1A130F');
-        this.skyGrad = g;
-        this.skyKey = key;
+      if (!hasBg) {
+        // dusk sky (cached gradient)
+        const key = W + 'x' + H;
+        if (this.skyKey !== key) {
+          const g = ctx.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, '#0B1026');
+          g.addColorStop(0.45, '#1B2140');
+          g.addColorStop(0.72, '#5A2A33');
+          g.addColorStop(1, '#1A130F');
+          this.skyGrad = g;
+          this.skyKey = key;
+        }
+        ctx.fillStyle = this.skyGrad;
+        ctx.fillRect(0, 0, W, H);
+
+        // sun glow on the horizon
+        const sg = ctx.createRadialGradient(W * 0.32, hor, 10, W * 0.32, hor, W * 0.42);
+        sg.addColorStop(0, 'rgba(255,120,60,0.30)');
+        sg.addColorStop(1, 'rgba(255,120,60,0)');
+        ctx.fillStyle = sg;
+        ctx.fillRect(0, 0, W, H);
+
+        // stars
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        for (let i = 0; i < 24; i++) {
+          const sx = ((i * 467.3) % W);
+          const sy = ((i * 211.7) % (hor * 0.7));
+          const tw = 0.4 + 0.6 * Math.abs(Math.sin(this.t * 0.8 + i));
+          ctx.globalAlpha = 0.25 * tw;
+          ctx.fillRect(sx, sy, 2, 2);
+        }
+        ctx.globalAlpha = 1;
+
+        // far hills
+        ctx.fillStyle = '#11141F';
+        ctx.beginPath();
+        ctx.moveTo(0, hor);
+        for (let x = 0; x <= W; x += W / 14) {
+          ctx.lineTo(x, hor - 14 - 26 * Math.abs(Math.sin(x * 0.013 + 2)));
+        }
+        ctx.lineTo(W, hor);
+        ctx.closePath();
+        ctx.fill();
       }
-      ctx.fillStyle = this.skyGrad;
-      ctx.fillRect(0, 0, W, H);
-
-      // sun glow on the horizon
-      const sg = ctx.createRadialGradient(W * 0.32, hor, 10, W * 0.32, hor, W * 0.42);
-      sg.addColorStop(0, 'rgba(255,120,60,0.30)');
-      sg.addColorStop(1, 'rgba(255,120,60,0)');
-      ctx.fillStyle = sg;
-      ctx.fillRect(0, 0, W, H);
-
-      // stars
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      for (let i = 0; i < 24; i++) {
-        const sx = ((i * 467.3) % W);
-        const sy = ((i * 211.7) % (hor * 0.7));
-        const tw = 0.4 + 0.6 * Math.abs(Math.sin(this.t * 0.8 + i));
-        ctx.globalAlpha = 0.25 * tw;
-        ctx.fillRect(sx, sy, 2, 2);
-      }
-      ctx.globalAlpha = 1;
-
-      // far hills
-      ctx.fillStyle = '#11141F';
-      ctx.beginPath();
-      ctx.moveTo(0, hor);
-      for (let x = 0; x <= W; x += W / 14) {
-        ctx.lineTo(x, hor - 14 - 26 * Math.abs(Math.sin(x * 0.013 + 2)));
-      }
-      ctx.lineTo(W, hor);
-      ctx.closePath();
-      ctx.fill();
 
       // car light streaks (just past the horizon)
       ctx.save();
@@ -142,38 +147,40 @@
       }
       ctx.restore();
 
-      // road: perspective trapezoid
-      ctx.fillStyle = '#23252D';
-      ctx.beginPath();
-      ctx.moveTo(W * 0.44, hor);
-      ctx.lineTo(W * 0.56, hor);
-      ctx.lineTo(W * 1.05, H);
-      ctx.lineTo(-W * 0.05, H);
-      ctx.closePath();
-      ctx.fill();
-      // edge lines
-      ctx.strokeStyle = 'rgba(244,241,232,0.5)';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(W * 0.452, hor); ctx.lineTo(W * 0.01, H);
-      ctx.moveTo(W * 0.548, hor); ctx.lineTo(W * 0.99, H);
-      ctx.stroke();
-      // animated centre dashes flying toward the viewer
-      ctx.fillStyle = 'rgba(244,241,232,0.85)';
-      for (let k = 0; k < 9; k++) {
-        const tt = ((k / 9 + this.t * 0.22) % 1);
-        const p = tt * tt;
-        const y = lerp(hor + 4, H + 40, p);
-        const len = lerp(4, 60, p);
-        const wd = lerp(1.5, 12, p);
-        ctx.globalAlpha = clamp(tt * 3, 0, 1) * 0.9;
-        ctx.fillRect(W * 0.5 - wd / 2, y, wd, len);
+      // road: perspective trapezoid (the AI backdrop has its own road)
+      if (!hasBg) {
+        ctx.fillStyle = '#23252D';
+        ctx.beginPath();
+        ctx.moveTo(W * 0.44, hor);
+        ctx.lineTo(W * 0.56, hor);
+        ctx.lineTo(W * 1.05, H);
+        ctx.lineTo(-W * 0.05, H);
+        ctx.closePath();
+        ctx.fill();
+        // edge lines
+        ctx.strokeStyle = 'rgba(244,241,232,0.5)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(W * 0.452, hor); ctx.lineTo(W * 0.01, H);
+        ctx.moveTo(W * 0.548, hor); ctx.lineTo(W * 0.99, H);
+        ctx.stroke();
+        // animated centre dashes flying toward the viewer
+        ctx.fillStyle = 'rgba(244,241,232,0.85)';
+        for (let k = 0; k < 9; k++) {
+          const tt = ((k / 9 + this.t * 0.22) % 1);
+          const p = tt * tt;
+          const y = lerp(hor + 4, H + 40, p);
+          const len = lerp(4, 60, p);
+          const wd = lerp(1.5, 12, p);
+          ctx.globalAlpha = clamp(tt * 3, 0, 1) * 0.9;
+          ctx.fillRect(W * 0.5 - wd / 2, y, wd, len);
+        }
+        ctx.globalAlpha = 1;
       }
-      ctx.globalAlpha = 1;
 
       // hero cone + spotlight
       const hh = clamp(Math.min(W, H) * 0.46, 170, 430);
-      const hx = W > 760 ? W * 0.70 : W * 0.5;
+      const hx = W > 760 ? W * (hasBg ? 0.73 : 0.70) : W * 0.5;
       const hy = W > 760 ? H * 0.80 : H * 0.87;
       const bob = Math.sin(this.t * 1.3) * hh * 0.012;
 

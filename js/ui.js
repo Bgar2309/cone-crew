@@ -77,7 +77,7 @@
       return `
       <div class="screen menu">
         <div class="menu-bar">
-          <span class="brand-badge">EHS</span>
+          <span class="brand-badge"><img src="assets/img/logo.png" alt="EHS — Euro Highway Safety" onerror="this.parentNode.textContent='EHS'"></span>
           <div class="menu-tools">
             <button class="tool-btn" data-act="sound" aria-label="sound">${CC.audio.muted ? '🔇' : '🔊'}</button>
             <button class="tool-btn" data-act="lang" aria-label="language">${CC.i18n.lang === 'fr' ? 'EN' : 'FR'}</button>
