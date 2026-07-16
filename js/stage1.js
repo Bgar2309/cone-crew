@@ -244,42 +244,50 @@
       const L = this.layout();
       const { W, H } = L;
 
-      // depot wall
-      let g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, '#171A22');
-      g.addColorStop(0.7, '#20242E');
-      g.addColorStop(1, '#161920');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
+      // depot wall: AI backdrop when loaded (its floor line pinned to floorY),
+      // procedural wall + racks + lamps otherwise
+      let g;
+      if (CC.sprites && CC.sprites.cover(ctx, 'bgDepot', 0, 0, W, L.floorY, 0.79)) {
+        // slight dark wash so the gameplay pops over the backdrop
+        ctx.fillStyle = 'rgba(8,10,16,0.22)';
+        ctx.fillRect(0, 0, W, L.floorY);
+      } else {
+        g = ctx.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, '#171A22');
+        g.addColorStop(0.7, '#20242E');
+        g.addColorStop(1, '#161920');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
 
-      // shelving silhouettes
-      ctx.fillStyle = 'rgba(10,12,17,0.55)';
-      const rackY = H * 0.30;
-      for (const rx of [W * 0.08, W * 0.80]) {
-        ctx.fillRect(rx, rackY, W * 0.13, H * 0.55);
-        ctx.fillStyle = 'rgba(255,160,90,0.07)';
-        for (let s = 0; s < 3; s++) ctx.fillRect(rx + 6, rackY + 20 + s * H * 0.16, W * 0.13 - 12, H * 0.10);
+        // shelving silhouettes
         ctx.fillStyle = 'rgba(10,12,17,0.55)';
-      }
+        const rackY = H * 0.30;
+        for (const rx of [W * 0.08, W * 0.80]) {
+          ctx.fillRect(rx, rackY, W * 0.13, H * 0.55);
+          ctx.fillStyle = 'rgba(255,160,90,0.07)';
+          for (let s = 0; s < 3; s++) ctx.fillRect(rx + 6, rackY + 20 + s * H * 0.16, W * 0.13 - 12, H * 0.10);
+          ctx.fillStyle = 'rgba(10,12,17,0.55)';
+        }
 
-      // hanging lamps + light pools
-      for (const lx of [W * 0.25, W * 0.5, W * 0.75]) {
-        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(lx, 0); ctx.lineTo(lx, H * 0.05); ctx.stroke();
-        const lp = ctx.createRadialGradient(lx, H * 0.06, 4, lx, H * 0.06, H * 0.5);
-        lp.addColorStop(0, 'rgba(255,214,150,0.10)');
-        lp.addColorStop(1, 'rgba(255,214,150,0)');
-        ctx.fillStyle = lp;
-        ctx.beginPath();
-        ctx.moveTo(lx - 14, H * 0.06);
-        ctx.lineTo(lx + 14, H * 0.06);
-        ctx.lineTo(lx + H * 0.30, H * 0.9);
-        ctx.lineTo(lx - H * 0.30, H * 0.9);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = '#FFD696';
-        ctx.fillRect(lx - 12, H * 0.05, 24, 6);
+        // hanging lamps + light pools
+        for (const lx of [W * 0.25, W * 0.5, W * 0.75]) {
+          ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(lx, 0); ctx.lineTo(lx, H * 0.05); ctx.stroke();
+          const lp = ctx.createRadialGradient(lx, H * 0.06, 4, lx, H * 0.06, H * 0.5);
+          lp.addColorStop(0, 'rgba(255,214,150,0.10)');
+          lp.addColorStop(1, 'rgba(255,214,150,0)');
+          ctx.fillStyle = lp;
+          ctx.beginPath();
+          ctx.moveTo(lx - 14, H * 0.06);
+          ctx.lineTo(lx + 14, H * 0.06);
+          ctx.lineTo(lx + H * 0.30, H * 0.9);
+          ctx.lineTo(lx - H * 0.30, H * 0.9);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = '#FFD696';
+          ctx.fillRect(lx - 12, H * 0.05, 24, 6);
+        }
       }
 
       // floor

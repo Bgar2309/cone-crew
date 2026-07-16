@@ -67,7 +67,8 @@ css/style.css     EHS branding, HUD, menus (safety orange #FF4A1F)
 js/util.js        math, easing, storage
 js/i18n.js        all FR/EN strings
 js/audio.js       synthesised SFX
-js/cone.js        the vector REVO 42 R2 (one function draws every cone in the game)
+js/sprites.js     AI-art sprite/backdrop loader (assets/img/) with vector fallback
+js/cone.js        the REVO 42 R2 (one function draws every cone; sprite or vector)
 js/fx.js          particles, confetti, floaters, screen shake
 js/scenes.js      scene manager
 js/ui.js          HUD + overlay screens (menu, results, leaderboard…)
@@ -78,6 +79,15 @@ js/stage3.js      Rush Hour (hold the line)
 js/main.js        boot, loop, input, game flow, ranks & leaderboard
 test/smoke.js     headless end-to-end test: node test/smoke.js
 ```
+
+### Artwork pipeline
+
+The cone, the truck and the four backdrops are AI-generated (GPT Image 2, with a
+real photo of the REVO 42 R2 as reference — prompts in `docs/prompts-images-ia.md`).
+Raw green-screen originals live in `assets/sprites/`; run
+`python3 tools/process-sprites.py` to chroma-key/compress them into the
+`assets/img/` files the game loads. If any image is missing, `js/sprites.js`
+reports it as not ready and the game falls back to the original vector drawing.
 
 Difficulty, scoring and rank thresholds are plain constants at the top of each stage
 file and in `js/main.js` (`RANKS`).

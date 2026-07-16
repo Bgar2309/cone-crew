@@ -346,37 +346,39 @@
       const L = this.layout();
       const { W, H } = L;
 
-      // night sky (cached)
-      const key = W + 'x' + H;
-      if (this.skyKey !== key) {
-        const g = ctx.createLinearGradient(0, 0, 0, L.trafficTop);
-        g.addColorStop(0, '#05070F');
-        g.addColorStop(0.7, '#0D1424');
-        g.addColorStop(1, '#1A2030');
-        this.skyGrad = g;
-        this.skyKey = key;
-      }
-      ctx.fillStyle = this.skyGrad;
-      ctx.fillRect(0, 0, W, L.trafficTop);
+      // night sky + skyline: AI backdrop when loaded, procedural otherwise
+      if (!(CC.sprites && CC.sprites.cover(ctx, 'bgNight', 0, 0, W, L.trafficTop, 1))) {
+        const key = W + 'x' + H;
+        if (this.skyKey !== key) {
+          const g = ctx.createLinearGradient(0, 0, 0, L.trafficTop);
+          g.addColorStop(0, '#05070F');
+          g.addColorStop(0.7, '#0D1424');
+          g.addColorStop(1, '#1A2030');
+          this.skyGrad = g;
+          this.skyKey = key;
+        }
+        ctx.fillStyle = this.skyGrad;
+        ctx.fillRect(0, 0, W, L.trafficTop);
 
-      // stars + skyline
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      for (let i = 0; i < 26; i++) {
-        const sx = (i * 419.7) % W;
-        const sy = (i * 173.3) % (L.trafficTop * 0.55);
-        ctx.globalAlpha = 0.18 + 0.2 * Math.abs(Math.sin(this.t + i * 2));
-        ctx.fillRect(sx, sy, 2, 2);
-      }
-      ctx.globalAlpha = 1;
-      for (let i = 0; i < 14; i++) {
-        const bw = W / 14;
-        const bh = (0.35 + 0.55 * Math.abs(Math.sin(i * 3.7))) * L.trafficTop * 0.5;
-        ctx.fillStyle = '#0A0E18';
-        ctx.fillRect(i * bw, L.trafficTop - bh, bw - 4, bh);
-        ctx.fillStyle = 'rgba(255,214,140,0.25)';
-        for (let wy = 0; wy < 3; wy++) {
-          if ((i * 7 + wy * 3) % 4 === 0) continue;
-          ctx.fillRect(i * bw + bw * 0.2, L.trafficTop - bh + 8 + wy * 12, 4, 5);
+        // stars + skyline
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        for (let i = 0; i < 26; i++) {
+          const sx = (i * 419.7) % W;
+          const sy = (i * 173.3) % (L.trafficTop * 0.55);
+          ctx.globalAlpha = 0.18 + 0.2 * Math.abs(Math.sin(this.t + i * 2));
+          ctx.fillRect(sx, sy, 2, 2);
+        }
+        ctx.globalAlpha = 1;
+        for (let i = 0; i < 14; i++) {
+          const bw = W / 14;
+          const bh = (0.35 + 0.55 * Math.abs(Math.sin(i * 3.7))) * L.trafficTop * 0.5;
+          ctx.fillStyle = '#0A0E18';
+          ctx.fillRect(i * bw, L.trafficTop - bh, bw - 4, bh);
+          ctx.fillStyle = 'rgba(255,214,140,0.25)';
+          for (let wy = 0; wy < 3; wy++) {
+            if ((i * 7 + wy * 3) % 4 === 0) continue;
+            ctx.fillRect(i * bw + bw * 0.2, L.trafficTop - bh + 8 + wy * 12, 4, 5);
+          }
         }
       }
 
