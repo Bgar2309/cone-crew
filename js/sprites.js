@@ -8,6 +8,7 @@
   const FILES = {
     cone:    'assets/img/cone.png',
     truck:   'assets/img/truck.png',
+    logo:    'assets/img/logo.png',
     bgMenu:  'assets/img/bg-menu.jpg',
     bgDusk:  'assets/img/bg-dusk.jpg',
     bgNight: 'assets/img/bg-night.jpg',

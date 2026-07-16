@@ -86,7 +86,9 @@ The cone, the truck and the four backdrops are AI-generated (GPT Image 2, with a
 real photo of the REVO 42 R2 as reference — prompts in `docs/prompts-images-ia.md`).
 Raw green-screen originals live in `assets/sprites/`; run
 `python3 tools/process-sprites.py` to chroma-key/compress them into the
-`assets/img/` files the game loads. If any image is missing, `js/sprites.js`
+`assets/img/` files the game loads. The official EHS logo
+(`assets/sprites/logo.png`, shown in the menu badge and on the stage-3 site
+sign) goes through the same script — trim + downscale only. If any image is missing, `js/sprites.js`
 reports it as not ready and the game falls back to the original vector drawing.
 
 Difficulty, scoring and rank thresholds are plain constants at the top of each stage

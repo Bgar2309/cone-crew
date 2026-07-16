@@ -22,6 +22,7 @@ const ASSETS = [
   './assets/revo-42-r2.jpg',
   './assets/img/cone.png',
   './assets/img/truck.png',
+  './assets/img/logo.png',
   './assets/img/bg-menu.jpg',
   './assets/img/bg-dusk.jpg',
   './assets/img/bg-night.jpg',

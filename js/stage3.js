@@ -577,20 +577,28 @@
       CC.util.rr(ctx, fx - 12, fy - 98, 24, 14, 3);
       ctx.fill();
 
-      // EHS site sign
+      // EHS site sign (official logo when loaded, plain text fallback)
+      const logo = CC.sprites && CC.sprites.has('logo') ? CC.sprites.get('logo') : null;
       const sx = W * 0.93, sy = L.zoneTop + 30;
+      const sw = logo ? 82 : 60, sh = logo ? 54 : 44;
       ctx.fillStyle = '#F4F1E8';
-      CC.util.rr(ctx, sx - 30, sy, 60, 44, 4);
+      CC.util.rr(ctx, sx - sw / 2, sy, sw, sh, 4);
       ctx.fill();
       ctx.strokeStyle = CC.cone.ORANGE;
       ctx.lineWidth = 4;
-      CC.util.rr(ctx, sx - 30, sy, 60, 44, 4);
+      CC.util.rr(ctx, sx - sw / 2, sy, sw, sh, 4);
       ctx.stroke();
-      ctx.font = `bold 16px ${CC.fx.FONT}`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#15171C';
-      ctx.fillText('EHS', sx, sy + 22);
+      if (logo) {
+        const iw = logo.naturalWidth || logo.width, ih = logo.naturalHeight || logo.height;
+        const lw = sw - 16, lh = lw * (ih / iw);
+        ctx.drawImage(logo, sx - lw / 2, sy + (sh - lh) / 2, lw, lh);
+      } else {
+        ctx.font = `bold 16px ${CC.fx.FONT}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#15171C';
+        ctx.fillText('EHS', sx, sy + 22);
+      }
     },
 
     drawWorker(ctx, x, y, phase) {

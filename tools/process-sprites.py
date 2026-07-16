@@ -46,8 +46,19 @@ def bg(path, out, max_w=1920, q=85):
     im.save(out, quality=q, optimize=True)
     print(f'{out}: {im.size[0]}x{im.size[1]} {os.path.getsize(out) // 1024}KB')
 
+def logo(path, out, max_h=256):
+    """Already-transparent PNG (official logo): trim + downscale only."""
+    im = Image.open(path).convert('RGBA')
+    im = im.crop(im.split()[3].getbbox())
+    w, h = im.size
+    if h > max_h:
+        im = im.resize((round(w * max_h / h), max_h), Image.LANCZOS)
+    im.save(out, optimize=True)
+    print(f'{out}: {im.size[0]}x{im.size[1]} {os.path.getsize(out) // 1024}KB')
+
 chroma_key(f'{SRC}/cone.png',   f'{DST}/cone.png',  ('h', 1024))
 chroma_key(f'{SRC}/camion.png', f'{DST}/truck.png', ('w', 1024))
+logo(f'{SRC}/logo.png', f'{DST}/logo.png')
 bg(f'{SRC}/dusk.png',       f'{DST}/bg-dusk.jpg')
 bg(f'{SRC}/city night.png', f'{DST}/bg-night.jpg')
 bg(f'{SRC}/entrepot.png',   f'{DST}/bg-depot.jpg')
